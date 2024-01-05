@@ -3,12 +3,20 @@ use console::{Term, Key};
 use rand::Rng;
 
 const RANDOM_STEPS: usize = 100000;
+
 struct BarleyBreak {
     field: Vec<Vec<u8>>,
     position: Vec<u8>,
     size: usize,
     steps: u64,
     solved: bool,
+}
+
+#[derive(PartialEq)]
+enum Mode {
+    Game,
+    ChangeLevel,
+    Solve,
 }
 
 impl BarleyBreak {
@@ -125,8 +133,22 @@ fn show_cell(cell: u8, level: usize) -> String {
     return " ".repeat(space_begin) + &cell.to_string() + &" ".repeat(space_end);
 }
 
+fn print_select_level(level: usize) {
+    Command::new("clear").status().unwrap();
+    for i in 2..=16 {
+        if i == level {
+            println!("[*] - {} * {}", i, i);
+        } else {
+            println!("[ ] - {} * {}", i, i);
+        }
+    }
+}
+
 fn main() {
-    let mut game = BarleyBreak::init(4);
+    let mut level:usize = 4;
+    let mut game = BarleyBreak::init(level);
+    let mut mode: Mode = Mode::Game;
+
     let stdout = Term::buffered_stdout();
 
     game.print();
@@ -134,12 +156,64 @@ fn main() {
     loop {
         if let Ok(character) = stdout.read_key() {
             match character {
-                Key::ArrowUp => {game.step(1); game.print();},
-                Key::ArrowRight => {game.step(2); game.print();},
-                Key::ArrowDown => {game.step(3); game.print();},
-                Key::ArrowLeft => {game.step(4); game.print();},
-                Key::Char('r') => {game.restart(); game.print();},
-                _ => break,
+                Key::ArrowUp => {
+                    if mode == Mode::Game {
+                        game.step(1);
+                        game.print();
+                    } else if mode == Mode::ChangeLevel && level > 2 {
+                        level -= 1;
+                        print_select_level(level);
+                    }
+                },
+                Key::ArrowRight => {
+                    if mode == Mode::Game {
+                        game.step(2);
+                        game.print();
+                    }
+                },
+                Key::ArrowDown => {
+                    if mode == Mode::Game {
+                        game.step(3);
+                        game.print();
+                    } else if mode == Mode::ChangeLevel && level < 16 {
+                        level += 1;
+                        print_select_level(level);
+                    }
+                },
+                Key::ArrowLeft => {
+                    if mode == Mode::Game {
+                        game.step(4);
+                        game.print();
+                    }
+                },
+                Key::Char('r') => {
+                    if mode == Mode::Game {
+                        game.restart();
+                        game.print();
+                    }
+                },
+                Key::Char('l') => {
+                    if mode == Mode::Game {
+                        mode = Mode::ChangeLevel;
+                        print_select_level(level);
+                    }
+                }
+                Key::Escape => {
+                    if mode == Mode::Game {
+                        break;
+                    } else if mode == Mode::ChangeLevel {
+                        mode = Mode::Game;
+                        game.print();
+                    }
+                }
+                Key::Enter => {
+                    if mode == Mode::ChangeLevel {
+                        mode = Mode::Game;
+                        game = BarleyBreak::init(level);
+                        game.print();
+                    }
+                }
+                _ => {},
             }
         }
     }
