@@ -92,6 +92,11 @@ impl BarleyBreak {
             self.check_solved();
         }
     }
+
+    fn print(&self) {
+        Command::new("clear").status().unwrap();
+        println!("{}", self);
+    }
 }
 
 impl fmt::Display for BarleyBreak {
@@ -104,7 +109,7 @@ impl fmt::Display for BarleyBreak {
             res.push_str("\n");
         }
         if self.solved {
-            return write!(f, "{}\nSteps: {}\n\n!!!Congratulation!!! You solved this puzzle with {} steps\n\n{}", res, self.steps, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
+            return write!(f, "{}\nSteps: {}\n\n !!!Congratulations!!! You solved this puzzle with {} steps\n\n{}", res, self.steps, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
         }
         return write!(f, "{}\nSteps: {}\n\n\n\n{}", res, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
     }
@@ -124,17 +129,16 @@ fn main() {
     let mut game = BarleyBreak::init(4);
     let stdout = Term::buffered_stdout();
 
-    Command::new("clear").status().unwrap();
-    println!("{}", game);
+    game.print();
 
     loop {
         if let Ok(character) = stdout.read_key() {
             match character {
-                Key::ArrowUp => {game.step(1); Command::new("clear").status().unwrap(); println!("{}", game);},
-                Key::ArrowRight => {game.step(2); Command::new("clear").status().unwrap(); println!("{}", game);},
-                Key::ArrowDown => {game.step(3); Command::new("clear").status().unwrap(); println!("{}", game);},
-                Key::ArrowLeft => {game.step(4); Command::new("clear").status().unwrap(); println!("{}", game);},
-                Key::Char('r') => {game.restart(); Command::new("clear").status().unwrap(); println!("{}", game);},
+                Key::ArrowUp => {game.step(1); game.print();},
+                Key::ArrowRight => {game.step(2); game.print();},
+                Key::ArrowDown => {game.step(3); game.print();},
+                Key::ArrowLeft => {game.step(4); game.print();},
+                Key::Char('r') => {game.restart(); game.print();},
                 _ => break,
             }
         }
