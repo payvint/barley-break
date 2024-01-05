@@ -8,6 +8,7 @@ struct BarleyBreak {
     position: Vec<u8>,
     size: usize,
     steps: u64,
+    solved: bool,
 }
 
 impl BarleyBreak {
@@ -24,9 +25,11 @@ impl BarleyBreak {
             field,
             position,
             size: level,
-            steps: 0
+            steps: 0,
+            solved: false,
         };
         game.rand();
+        game.solved = false;
         game
     }
 
@@ -44,6 +47,22 @@ impl BarleyBreak {
         self.field = new_game.field;
         self.position = new_game.position;
         self.steps = new_game.steps;
+        self.solved = false;
+    }
+
+    fn is_solved(&mut self) -> bool {
+        for step in 1..self.position.len() {
+            if self.position[step] != (step - 1) as u8 {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    fn check_solved(&mut self) {
+        if self.is_solved() {
+            self.solved = true;
+        }
     }
 
     // direction:
@@ -68,7 +87,10 @@ impl BarleyBreak {
         self.position[self.field[(new_position / self.size as u8) as usize][(new_position % self.size as u8) as usize] as usize] = self.position[0];
         self.field[(new_position / self.size as u8) as usize][(new_position % self.size as u8) as usize] = 0;
         self.position[0] = new_position;
-        self.steps += 1;
+        if !self.solved {
+            self.steps += 1;
+            self.check_solved();
+        }
     }
 }
 
@@ -81,7 +103,10 @@ impl fmt::Display for BarleyBreak {
             }
             res.push_str("\n");
         }
-        return write!(f, "{}\nSteps: {}\n\n{}", res, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
+        if self.solved {
+            return write!(f, "{}\nSteps: {}\n\n!!!Congratulation!!! You solved this puzzle with {} steps\n\n{}", res, self.steps, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
+        }
+        return write!(f, "{}\nSteps: {}\n\n\n\n{}", res, self.steps, "UP DOWN LEFT RIGHT - control the game\nR - restart\nL - change hardness level\nI - solve this puzzle\nEsc - exit");
     }
 }
 
