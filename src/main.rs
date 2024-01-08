@@ -11,6 +11,13 @@ const MIN_LEVEL: usize = 2;
 const MAX_LEVEL: usize = 16;
 const DEFAULT_LEVEL: usize = 4;
 const DEFAULT_AUTO_REFRAME: u64 = 100;
+const QUICK_SOLUTION_TOP_RIGHT: [u8; 10] = [DOWN, RIGHT, UP, LEFT, UP, RIGHT, DOWN, DOWN, LEFT, UP];
+const QUICK_SOLUTION_BOTTOM_LEFT: [u8; 10] = [RIGHT, DOWN, LEFT, UP, LEFT, DOWN, RIGHT, RIGHT, UP, LEFT];
+const PRINT_MENU: &str =   "UP DOWN LEFT RIGHT - control the game\n\
+                            R - restart\n\
+                            L - change level\n\
+                            I - solve this puzzle\n\
+                            Esc - exit";
 
 struct BarleyBreak {
     field: Vec<Vec<u8>>,
@@ -161,16 +168,7 @@ impl BarleyBreak {
                 {
                     final_position = elem + self.size as u8 * 2 - 1;
                     final_position_for_zero = elem + self.size as u8 - 1;
-                    final_steps.push(3);
-                    final_steps.push(2);
-                    final_steps.push(1);
-                    final_steps.push(4);
-                    final_steps.push(1);
-                    final_steps.push(2);
-                    final_steps.push(3);
-                    final_steps.push(3);
-                    final_steps.push(4);
-                    final_steps.push(1);
+                    final_steps.extend(QUICK_SOLUTION_TOP_RIGHT);
 
                 } else if
                     layer > MIN_LEVEL &&
@@ -179,16 +177,7 @@ impl BarleyBreak {
                 {
                     final_position = elem + 1;
                     final_position_for_zero = *elem;
-                    final_steps.push(2);
-                    final_steps.push(3);
-                    final_steps.push(4);
-                    final_steps.push(1);
-                    final_steps.push(4);
-                    final_steps.push(3);
-                    final_steps.push(2);
-                    final_steps.push(2);
-                    final_steps.push(1);
-                    final_steps.push(4);
+                    final_steps.extend(QUICK_SOLUTION_BOTTOM_LEFT);
                 }
                 let path = self.find_shortest_way(*elem, final_position, layer, block.clone());
 
@@ -330,41 +319,29 @@ impl fmt::Display for BarleyBreak {
         if self.solved {
             return write!(
                 f,
-                "{}\nSteps: {}\n\n !!!Congratulations!!! You solved this puzzle with {} steps\n\n{}\n{}\n{}\n{}\n{}",
+                "{}\nSteps: {}\n\n !!!Congratulations!!! You solved this puzzle with {} steps\n\n{}",
                 res,
                 self.steps,
                 self.steps,
-                "UP DOWN LEFT RIGHT - control the game",
-                "R - restart",
-                "L - change level",
-                "I - solve this puzzle",
-                "Esc - exit"
+                PRINT_MENU
             );
         }
         if self.moving > 0 {
             return write!(
                 f,
-                "{}\nSteps: {}\n\nMoving the number {}\n\n{}\n{}\n{}\n{}\n{}",
+                "{}\nSteps: {}\n\nMoving the number {}\n\n{}",
                 res,
                 self.steps,
                 self.moving,
-                "UP DOWN LEFT RIGHT - control the game",
-                "R - restart",
-                "L - change level",
-                "I - solve this puzzle",
-                "Esc - exit"
+                PRINT_MENU
             );
         }
         write!(
             f,
-            "{}\nSteps: {}\n\n\n\n{}\n{}\n{}\n{}\n{}",
+            "{}\nSteps: {}\n\n\n\n{}",
             res,
             self.steps,
-            "UP DOWN LEFT RIGHT - control the game",
-            "R - restart",
-            "L - change level",
-            "I - solve this puzzle",
-            "Esc - exit"
+            PRINT_MENU
         )
     }
 }
