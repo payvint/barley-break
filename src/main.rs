@@ -433,6 +433,7 @@ fn main() {
                     } else if mode == Mode::ChangeLevel {
                         mode = Mode::Game;
                         game.print();
+                        level = game.size;
                     }
                 }
                 Key::Enter => {
