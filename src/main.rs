@@ -164,10 +164,10 @@ impl BarleyBreak {
                 if
                     layer > MIN_LEVEL &&
                     elem % self.size as u8 == 0 &&
-                    !(self.position[0] == elem - 1 && self.position[*elem as usize] == elem + self.size as u8 - 1)
+                    !(self.position[0] == elem - 1 && self.position[*elem as usize] == elem - 1 + self.size as u8)
                 {
-                    final_position = elem + self.size as u8 * 2 - 1;
-                    final_position_for_zero = elem + self.size as u8 - 1;
+                    final_position = elem - 1 + self.size as u8 * 2;
+                    final_position_for_zero = elem - 1 + self.size as u8;
                     final_steps.extend(QUICK_SOLUTION_TOP_RIGHT);
 
                 } else if
@@ -246,54 +246,62 @@ impl BarleyBreak {
         let mut stop = false;
         loop {
             let pointer = queue.pop_front().unwrap();
+            let mut next_steps = Vec::<(u8, usize, u8)>::new();
             block[pointer as usize] = true;
             if
                 pointer / (self.size as u8) < (self.size - 1) as u8 &&
-                path[counter].0 != DOWN &&
                 !block[pointer as usize + self.size]
             {
                 if position == pointer + self.size as u8 {
                     stop = true;
                 }
-                queue.push_back(pointer + self.size as u8);
-                path.push((UP, counter));
-                if stop { break; }
+                next_steps.push((UP, counter, pointer + self.size as u8));
+                if stop { path.push((UP, counter)); break; }
             }
             if
                 pointer % (self.size as u8) > (self.size - layer) as u8 &&
-                path[counter].0 != LEFT &&
                 !block[pointer as usize - 1]
             {
                 if position == pointer - 1 {
                     stop = true;
                 }
-                queue.push_back(pointer - 1);
-                path.push((RIGHT, counter));
-                if stop { break; }
+                next_steps.push((RIGHT, counter, pointer - 1));
+                if stop { path.push((RIGHT, counter)); break; }
             }
             if
                 pointer / (self.size as u8) > (self.size - layer) as u8 &&
-                path[counter].0 != UP &&
                 !block[pointer as usize - self.size]
             {
                 if position == pointer - self.size as u8 {
                     stop = true;
                 }
-                queue.push_back(pointer - self.size as u8);
-                path.push((DOWN, counter));
-                if stop { break; }
+                next_steps.push((DOWN, counter, pointer - self.size as u8));
+                if stop { path.push((DOWN, counter)); break; }
             }
             if
                 pointer % (self.size as u8) < (self.size - 1) as u8 &&
-                path[counter].0 != RIGHT &&
                 !block[pointer as usize + 1]
             {
                 if position == pointer + 1 {
                     stop = true;
                 }
-                queue.push_back(pointer + 1);
-                path.push((LEFT, counter));
-                if stop { break; }
+                next_steps.push((LEFT, counter, pointer + 1));
+                if stop { path.push((LEFT, counter)); break; }
+            }
+            if path[counter].0 % 2 == 1 {
+                for i in next_steps.iter() {
+                    if i.0 % 2 == 0 { queue.push_back(i.2); path.push((i.0, i.1)); }
+                }
+                for i in next_steps.iter() {
+                    if i.0 % 2 == 1 { queue.push_back(i.2); path.push((i.0, i.1)); }
+                }
+            } else {
+                for i in next_steps.iter() {
+                    if i.0 % 2 == 1 { queue.push_back(i.2); path.push((i.0, i.1)); }
+                }
+                for i in next_steps.iter() {
+                    if i.0 % 2 == 0 { queue.push_back(i.2); path.push((i.0, i.1)); }
+                }
             }
             counter += 1;
         };
