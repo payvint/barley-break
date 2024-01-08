@@ -45,7 +45,9 @@ impl BarleyBreak {
             solved: false,
             moving: 0
         };
-        game.rand();
+        while game.is_solved() {
+            game.rand();
+        }
         game.solved = false;
         game
     }
@@ -73,7 +75,7 @@ impl BarleyBreak {
                 return false;
             }
         }
-        return true;
+        true
     }
 
     fn check_solved(&mut self) {
@@ -107,6 +109,10 @@ impl BarleyBreak {
         }
     }
 
+    fn reverse_step(direction: u8) -> u8 {
+        (direction + 2) % 5 + (direction + 2) / 5
+    }
+
     fn show_cell(&self, cell: u8) -> String {
         let character = " ";
         let space = (self.size * self.size - 1).to_string().len() + 1;
@@ -115,7 +121,7 @@ impl BarleyBreak {
         } 
         let space_begin = (&space - &cell.to_string().len()) / 2; 
         let space_end = (&space - &cell.to_string().len()) / 2 + (&space - &cell.to_string().len()) % 2;
-        return character.repeat(space_begin) + &cell.to_string() + &character.repeat(space_end);
+        character.repeat(space_begin) + &cell.to_string() + &character.repeat(space_end)
     }
 
     fn print(&self) {
@@ -209,7 +215,7 @@ impl BarleyBreak {
                         self.print();
                         thread::sleep(Duration::from_millis(DEFAULT_AUTO_REFRAME)); 
                     }
-                    self.step((*i + 2) % 5 + (*i + 2) / 5);
+                    self.step(Self::reverse_step(*i));
                     self.print();
                     thread::sleep(Duration::from_millis(DEFAULT_AUTO_REFRAME));
                 }
@@ -349,7 +355,7 @@ impl fmt::Display for BarleyBreak {
                 "Esc - exit"
             );
         }
-        return write!(
+        write!(
             f,
             "{}\nSteps: {}\n\n\n\n{}\n{}\n{}\n{}\n{}",
             res,
@@ -359,7 +365,7 @@ impl fmt::Display for BarleyBreak {
             "L - change level",
             "I - solve this puzzle",
             "Esc - exit"
-        );
+        )
     }
 }
 
