@@ -426,6 +426,9 @@ fn main() {
                     if mode == Mode::Game {
                         mode = Mode::ChangeLevel;
                         print_select_level(level);
+                    } else if mode == Mode::ChangeLevel {
+                        mode = Mode::Game;
+                        game.print();
                     }
                 }
                 Key::Char('i') => {
