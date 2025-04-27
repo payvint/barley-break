@@ -123,11 +123,11 @@ impl BarleyBreak {
     fn show_cell(&self, cell: u8) -> String {
         let character = " ";
         let space = (self.size * self.size - 1).to_string().len() + 1;
+        let space_begin = (&space - &cell.to_string().len()) / 2; 
+        let space_end = (&space - &cell.to_string().len()) / 2 + (&space - &cell.to_string().len()) % 2;
         if cell == 0 || (!self.solved && self.moving > 0 && self.moving == cell && self.steps % 5 == 0 ) {
             return character.repeat(space);
         } 
-        let space_begin = (&space - &cell.to_string().len()) / 2; 
-        let space_end = (&space - &cell.to_string().len()) / 2 + (&space - &cell.to_string().len()) % 2;
         character.repeat(space_begin) + &cell.to_string() + &character.repeat(space_end)
     }
 
@@ -179,7 +179,7 @@ impl BarleyBreak {
                     final_position_for_zero = *elem;
                     final_steps.extend(QUICK_SOLUTION_BOTTOM_LEFT);
                 }
-                let path = self.find_shortest_way(*elem, final_position, layer, block.clone());
+                let path = self.find_shortest_way(elem, &final_position, &layer, &block);
 
                 for i in path.iter().rev() {
                     let zero_position = if *i == UP {
@@ -191,14 +191,14 @@ impl BarleyBreak {
                     } else {
                         self.position[*elem as usize] as usize + 1
                     };
-                    let mut block_for_zero = block.clone();
-                    block_for_zero[self.position[*elem as usize] as usize] = true;
+                    block[self.position[*elem as usize] as usize] = true;
                     let path_for_zero = self.find_shortest_way(
-                        0,
-                        zero_position as u8,
-                        layer,
-                        block_for_zero
+                        &0,
+                        &(zero_position as u8),
+                        &layer,
+                        &block
                     );
+                    block[self.position[*elem as usize] as usize] = false;
                     for j in path_for_zero.iter().rev() {
                         self.step(*j);   
                         self.print();
@@ -209,14 +209,14 @@ impl BarleyBreak {
                     thread::sleep(Duration::from_millis(DEFAULT_AUTO_REFRAME));
                 }
                 if final_position_for_zero > 0 {
-                    let mut block_for_zero = block.clone();
-                    block_for_zero[self.position[*elem as usize] as usize] = true;
+                    block[self.position[*elem as usize] as usize] = true;
                     let path_for_zero = self.find_shortest_way(
-                        0,
-                        final_position_for_zero as u8,
-                        layer,
-                        block_for_zero
+                        &0,
+                        &final_position_for_zero as &u8,
+                        &layer,
+                        &block
                     );
+                    block[self.position[*elem as usize] as usize] = false;
                     for j in path_for_zero.iter().rev() {
                         self.step(*j);   
                         self.print();
@@ -234,25 +234,27 @@ impl BarleyBreak {
         }
     }
 
-    fn find_shortest_way(&self, cell: u8, position: u8, layer: usize, mut block: Vec<bool>) -> Vec<u8> {
-        if self.position[cell as usize] == position {
+    fn find_shortest_way(&self, cell: &u8, position: &u8, layer: &usize, block: &Vec<bool>) -> Vec<u8> {
+        if self.position[*cell as usize] == *position {
             return vec![];
         }
         let mut path = Vec::<(u8, usize)>::new();
         let mut queue = VecDeque::<u8>::new();
+        let mut block_temp = vec![false; self.size * self.size];
         path.push((0, 0));
-        queue.push_back(self.position[cell as usize]);
+        queue.push_back(self.position[*cell as usize]);
         let mut counter: usize = 0;
         let mut stop = false;
         loop {
             let pointer = queue.pop_front().unwrap();
             let mut next_steps = Vec::<(u8, usize, u8)>::new();
-            block[pointer as usize] = true;
+            block_temp[pointer as usize] = true;
             if
                 pointer / (self.size as u8) < (self.size - 1) as u8 &&
-                !block[pointer as usize + self.size]
+                !block[pointer as usize + self.size] &&
+                !block_temp[pointer as usize + self.size]
             {
-                if position == pointer + self.size as u8 {
+                if *position == pointer + self.size as u8 {
                     stop = true;
                 }
                 next_steps.push((UP, counter, pointer + self.size as u8));
@@ -260,9 +262,10 @@ impl BarleyBreak {
             }
             if
                 pointer % (self.size as u8) > (self.size - layer) as u8 &&
-                !block[pointer as usize - 1]
+                !block[pointer as usize - 1] &&
+                !block_temp[pointer as usize - 1]
             {
-                if position == pointer - 1 {
+                if *position == pointer - 1 {
                     stop = true;
                 }
                 next_steps.push((RIGHT, counter, pointer - 1));
@@ -270,9 +273,10 @@ impl BarleyBreak {
             }
             if
                 pointer / (self.size as u8) > (self.size - layer) as u8 &&
-                !block[pointer as usize - self.size]
+                !block[pointer as usize - self.size] &&
+                !block_temp[pointer as usize - self.size]
             {
-                if position == pointer - self.size as u8 {
+                if *position == pointer - self.size as u8 {
                     stop = true;
                 }
                 next_steps.push((DOWN, counter, pointer - self.size as u8));
@@ -280,9 +284,10 @@ impl BarleyBreak {
             }
             if
                 pointer % (self.size as u8) < (self.size - 1) as u8 &&
-                !block[pointer as usize + 1]
+                !block[pointer as usize + 1] &&
+                !block_temp[pointer as usize + 1]
             {
-                if position == pointer + 1 {
+                if *position == pointer + 1 {
                     stop = true;
                 }
                 next_steps.push((LEFT, counter, pointer + 1));
